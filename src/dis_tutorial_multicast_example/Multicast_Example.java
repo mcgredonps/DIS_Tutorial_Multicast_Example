@@ -7,7 +7,7 @@ import java.util.*;
 
 /**
  * The application CiscoAnyconnect causes endless problems when
- * resolving multicast IP numbers. InetAddress.getByName("239.1.2.3"); will
+ * resolving multicast IP numbers. Turn it off. InetAddress.getByName("239.1.2.3"); will
  * generate a result that will fail when for example trying to send. It
  * will attempt to send out all interfaces, and anything interface related to Cisco
  * AnyConnect will cause endless problems. Make sure AnyConnet is turned off.<p>
@@ -52,7 +52,7 @@ public class Multicast_Example
     public static final String MULTICAST_DIS_TRAFFIC = "239.1.2.3";
     
     /** What UDP port to listen and send on */
-    public static final int MULTICAST_PORT = 4567;
+    public static final int MULTICAST_PORT = 3000;
     
     /** How often we send messages, in milliseconds */
     public static final int MESSAGE_SEND_RATE = 10000;
@@ -65,7 +65,6 @@ public class Multicast_Example
         
         MulticastSocket socket;       // Socket on which to to send and receive
         InetAddress multicastAddress; // Non-text verson of multicast group
-        int participantID = (int)(Math.random() * 100000000);  // A randomly selected ID for this program
         
         try
         {
@@ -106,8 +105,8 @@ public class Multicast_Example
                        
             // Two threads. One periodically sends messages. The other listens for messages.
             // This is full duplex. 
-            SendingThread sendingThread = new SendingThread(socket,  multicastAddress, participantID);
-            ReceivingThread receivingThread = new ReceivingThread(socket, multicastAddress, participantID);
+            SendingThread sendingThread = new SendingThread(socket, multicastAddress);
+            ReceivingThread receivingThread = new ReceivingThread(socket, multicastAddress);
             
             receivingThread.start();
             sendingThread.start();

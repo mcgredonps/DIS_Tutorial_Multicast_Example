@@ -3,13 +3,16 @@ package dis_tutorial_multicast_example;
 
 import java.io.*;
 import java.net.*;
+import edu.nps.moves.disutil.PduFactory;
+import edu.nps.moves.dis.*;
 
 /**
  * A simple example of reading data from a multicast socket. <p>
  * 
- * Normally one would expect to decode a DIS message (or messages) here,
- * but instead we simply decode simple data. The objective is to show
- * networking, not DIS.<p>
+ * open-dis has organized conversions of binary DIS data on the
+ * network converted into a Java object. You can also manually
+ * decode the binary using standard programming techniques.
+ * For reasons of instruction I do a bit of both here.
  * 
  * @author DMcG
  */
@@ -18,11 +21,6 @@ public class ReceivingThread extends Thread
     /** Socket to use for reading network messages. Also used by the sender. */
     private MulticastSocket socket = null;
     
-    /** Each copy of the sender/recevier has a unique ID. Other processes should
-     * have different IDs.
-     */
-    private int participantID = 0;
-    
     /** Multicast address to send to, passed to the constructor */
     private InetAddress multicastAddress;
     
@@ -30,14 +28,12 @@ public class ReceivingThread extends Thread
      * 
      * @param socket UDP/multicast socket to send to
      * @param multicastAddress Multicast address to read from
-     * @param participantID The unique ID of this program. It should differ from the 
      * ID of the message we received from, provided it was sent from another program
      */
-    public ReceivingThread(MulticastSocket socket, InetAddress multicastAddress , int participantID)
+    public ReceivingThread(MulticastSocket socket, InetAddress multicastAddress )
     {
         this.socket = socket;
         this.multicastAddress = multicastAddress;
-        this.participantID = participantID;
     }
     
     /**
@@ -46,6 +42,10 @@ public class ReceivingThread extends Thread
      */
     public void run()
     {
+        // A pduFactory decodes binary format DIS messages and
+        // turns them into Java objects.
+        PduFactory pduFactory = new PduFactory();
+        
         while(true)
         {
             try
@@ -64,11 +64,20 @@ public class ReceivingThread extends Thread
                 // way
                 ByteArrayInputStream bais = new ByteArrayInputStream(packet.getData());
                 DataInputStream dis = new DataInputStream(bais);
-                int senderID = dis.readInt();
-                int messageCount = dis.readInt();
+                int disProtocolVersion = dis.readByte();
+                int exerciseIdentifier = dis.readByte();
+                int pduType = dis.readByte();
                 
                 System.out.println("----");
-                System.out.println("Receiver ID " + this.participantID + " got message from sender ID " + senderID + " with sender message sequence number "+ messageCount);
+                System.out.println("local programming decoding. disVersion:" + disProtocolVersion + " exerciseIdentifier:" + exerciseIdentifier + " pduType:" + pduType);
+                Pdu aPdu = pduFactory.createPdu(packet.getData());
+                
+                disProtocolVersion = aPdu.getProtocolVersion();
+                exerciseIdentifier = aPdu.getExerciseID();
+                pduType = aPdu.getPduType();
+                System.out.println("open-dis decoding. disVersion:" + disProtocolVersion + " exerciseIdentifier:" + exerciseIdentifier + " pduType:" + pduType);
+                
+                
                 System.out.println("----");
             }
             catch(Exception e)
