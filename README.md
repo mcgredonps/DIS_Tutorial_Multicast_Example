@@ -32,3 +32,19 @@ the entire PDU. We first decode the fiels manually:
 
 The puyrpose of the fields are discussed later. The "exerciseIdentifier" is between 0-255
 and is different, due to a random number selection, every time it is run.
+
+The other technique is to use open-dis, which can decode hundreds of fields. The code looks
+like this:
+
+~~~
+  PduFactory pduFactory = new PduFactory();
+  ...
+  Pdu aPdu = pduFactory.createPdu(packet.getData());
+                
+  disProtocolVersion = aPdu.getProtocolVersion();
+  exerciseIdentifier = aPdu.getExerciseID();
+  pduType = aPdu.getPduType();
+~~~
+
+This will interpret the data in the binary data the same way.
+
